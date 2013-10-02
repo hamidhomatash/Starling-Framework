@@ -14,6 +14,8 @@ package tests
     
     import org.flexunit.assertThat;
     import org.flexunit.asserts.assertEquals;
+    import org.flexunit.asserts.assertFalse;
+    import org.flexunit.asserts.assertTrue;
     import org.hamcrest.number.closeTo;
     
     import starling.animation.Juggler;
@@ -53,6 +55,18 @@ package tests
         }
         
         [Test]
+        public function testContains():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            var tween:Tween = new Tween(quad, 1.0);
+            
+            Assert.assertFalse(juggler.contains(tween));
+            juggler.add(tween);
+            Assert.assertTrue(juggler.contains(tween));
+        }
+        
+        [Test]
         public function testPurge():void
         {
             var juggler:Juggler = new Juggler();
@@ -82,6 +96,26 @@ package tests
         }
         
         [Test]
+        public function testPurgeFromAdvanceTime():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            
+            var tween1:Tween = new Tween(quad, 1.0);
+            var tween2:Tween = new Tween(quad, 1.0);
+            var tween3:Tween = new Tween(quad, 1.0);
+            
+            juggler.add(tween1);
+            juggler.add(tween2);
+            juggler.add(tween3);
+            
+            tween2.onUpdate = juggler.purge;
+            
+            // if this doesn't crash, we're fine =)
+            juggler.advanceTime(0.5);
+        }
+        
+        [Test]
         public function testRemoveTweensWithTarget():void
         {
             var juggler:Juggler = new Juggler();
@@ -103,6 +137,120 @@ package tests
             
             assertThat(quad1.rotation, closeTo(0.0, E));
             assertThat(quad2.rotation, closeTo(1.0, E));   
+        }
+        
+        [Test]
+        public function testContainsTweens():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad1:Quad = new Quad(100, 100);
+            var quad2:Quad = new Quad(100, 100);
+            var tween:Tween = new Tween(quad1, 1.0);
+            
+            juggler.add(tween);
+            
+            assertTrue(juggler.containsTweens(quad1));
+            assertFalse(juggler.containsTweens(quad2));
+        }
+        
+        [Test]
+        public function testAddTwice():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            var tween:Tween = new Tween(quad, 1.0);
+            
+            juggler.add(tween);
+            juggler.add(tween);
+            
+            assertThat(tween.currentTime, closeTo(0.0, E));
+            juggler.advanceTime(0.5);
+            assertThat(tween.currentTime, closeTo(0.5, E));
+        }
+        
+        [Test]
+        public function testModifyJugglerInCallback():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            
+            var tween1:Tween = new Tween(quad, 1.0);
+            tween1.animate("x", 100);
+            
+            var tween2:Tween = new Tween(quad, 0.5);
+            tween2.animate("y", 100);
+            
+            var tween3:Tween = new Tween(quad, 0.5);
+            tween3.animate("scaleX", 0.5);
+            
+            tween2.onComplete = function():void {
+                juggler.remove(tween1);
+                juggler.add(tween3);
+            };
+            
+            juggler.add(tween1);
+            juggler.add(tween2);
+            
+            juggler.advanceTime(0.5);
+            juggler.advanceTime(0.5);
+            
+            assertThat(quad.x, closeTo(50.0, E));
+            assertThat(quad.y, closeTo(100.0, E));
+            assertThat(quad.scaleX, closeTo(0.5, E));
+        }
+        
+        [Test]
+        public function testModifyJugglerTwiceInCallback():void
+        {
+            // https://github.com/PrimaryFeather/Starling-Framework/issues/155
+            
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            
+            var tween1:Tween = new Tween(quad, 1.0);
+            var tween2:Tween = new Tween(quad, 1.0);
+            tween2.fadeTo(0);
+            
+            juggler.add(tween1);
+            juggler.add(tween2);
+            
+            juggler.remove(tween1); // sets slot in array to null
+            tween2.onUpdate = juggler.remove;
+            tween2.onUpdateArgs = [tween2];
+            
+            juggler.advanceTime(0.5);
+            juggler.advanceTime(0.5);
+            
+            assertThat(quad.alpha, closeTo(0.5, E));
+        }
+        
+        [Test]
+        public function testTweenConvenienceMethod():void
+        {
+            var juggler:Juggler = new Juggler();
+            var quad:Quad = new Quad(100, 100);
+            
+            var completeCount:int = 0;
+            var startCount:int = 0;
+            
+            juggler.tween(quad, 1.0, {
+                x: 100,
+                onStart: onStart,
+                onComplete: onComplete
+            });
+                
+            juggler.advanceTime(0.5);
+            assertEquals(1, startCount);
+            assertEquals(0, completeCount);
+            assertThat(quad.x, closeTo(50, E));
+            
+            juggler.advanceTime(0.5);
+            assertEquals(1, startCount);
+            assertEquals(1, completeCount);
+            assertThat(quad.x, closeTo(100, E));
+                
+            function onComplete():void { completeCount++; }
+            function onStart():void { startCount++; }
         }
     }
 }

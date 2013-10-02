@@ -28,7 +28,7 @@ package starling.display
      *  
      *  <p>Beware that blending factors produce different output depending on the texture type.
      *  Textures may contain 'premultiplied alpha' (pma), which means that their RGB values were 
-     *  multiplied with their color value (to save processing time). Textures based on 'BitmapData'
+     *  multiplied with their alpha value (to save processing time). Textures based on 'BitmapData'
      *  objects have premultiplied alpha values, while ATF textures haven't. For this reason, 
      *  a blending mode may have different factors depending on the pma value.</p>
      *  
@@ -42,7 +42,7 @@ package starling.display
                 "none"     : [ Context3DBlendFactor.ONE, Context3DBlendFactor.ZERO ],
                 "normal"   : [ Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA ],
                 "add"      : [ Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.DESTINATION_ALPHA ],
-                "multiply" : [ Context3DBlendFactor.DESTINATION_COLOR, Context3DBlendFactor.ZERO ],
+                "multiply" : [ Context3DBlendFactor.DESTINATION_COLOR, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA ],
                 "screen"   : [ Context3DBlendFactor.SOURCE_ALPHA, Context3DBlendFactor.ONE ],
                 "erase"    : [ Context3DBlendFactor.ZERO, Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA ]
             },

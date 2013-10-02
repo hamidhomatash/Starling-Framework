@@ -5,10 +5,7 @@ package scenes
     import starling.core.Starling;
     import starling.display.MovieClip;
     import starling.events.Event;
-    import starling.text.TextField;
     import starling.textures.Texture;
-    import starling.utils.HAlign;
-    import starling.utils.VAlign;
 
     public class MovieScene extends Scene
     {
@@ -16,11 +13,11 @@ package scenes
         
         public function MovieScene()
         {
-            var frames:Vector.<Texture> = Assets.getTextureAtlas().getTextures("flight");
+            var frames:Vector.<Texture> = Game.assets.getTextures("flight");
             mMovie = new MovieClip(frames, 15);
             
             // add sounds
-            var stepSound:Sound = Assets.getSound("Step");
+            var stepSound:Sound = Game.assets.getSound("wing_flap");
             mMovie.setFrameSound(2, stepSound);
             
             // move the clip to the center and add it to the stage
@@ -34,12 +31,12 @@ package scenes
             addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
         }
         
-        private function onAddedToStage(event:Event):void
+        private function onAddedToStage():void
         {
             Starling.juggler.add(mMovie);
         }
         
-        private function onRemovedFromStage(event:Event):void
+        private function onRemovedFromStage():void
         {
             Starling.juggler.remove(mMovie);
         }

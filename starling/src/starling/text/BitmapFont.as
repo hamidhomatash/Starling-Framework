@@ -30,20 +30,20 @@ package starling.text
      *  This is what the file format looks like:
      *
      *  <pre> 
-	 *  &lt;font&gt;
-	 *    &lt;info face="BranchingMouse" size="40" /&gt;
-	 *    &lt;common lineHeight="40" /&gt;
-	 *    &lt;pages&gt;  &lt;!-- currently, only one page is supported --&gt;
-	 *      &lt;page id="0" file="texture.png" /&gt;
-	 *    &lt;/pages&gt;
-	 *    &lt;chars&gt;
-	 *      &lt;char id="32" x="60" y="29" width="1" height="1" xoffset="0" yoffset="27" xadvance="8" /&gt;
-	 *      &lt;char id="33" x="155" y="144" width="9" height="21" xoffset="0" yoffset="6" xadvance="9" /&gt;
-	 *    &lt;/chars&gt;
-	 *    &lt;kernings&gt; &lt;!-- Kerning is optional --&gt;
-	 *      &lt;kerning first="83" second="83" amount="-4"/&gt;
-	 *    &lt;/kernings&gt;
-	 *  &lt;/font&gt;
+     *  &lt;font&gt;
+     *    &lt;info face="BranchingMouse" size="40" /&gt;
+     *    &lt;common lineHeight="40" /&gt;
+     *    &lt;pages&gt;  &lt;!-- currently, only one page is supported --&gt;
+     *      &lt;page id="0" file="texture.png" /&gt;
+     *    &lt;/pages&gt;
+     *    &lt;chars&gt;
+     *      &lt;char id="32" x="60" y="29" width="1" height="1" xoffset="0" yoffset="27" xadvance="8" /&gt;
+     *      &lt;char id="33" x="155" y="144" width="9" height="21" xoffset="0" yoffset="6" xadvance="9" /&gt;
+     *    &lt;/chars&gt;
+     *    &lt;kernings&gt; &lt;!-- Kerning is optional --&gt;
+     *      &lt;kerning first="83" second="83" amount="-4"/&gt;
+     *    &lt;/kernings&gt;
+     *  &lt;/font&gt;
      *  </pre>
      *  
      *  Pass an instance of this class to the method <code>registerBitmapFont</code> of the
@@ -53,13 +53,6 @@ package starling.text
      */ 
     public class BitmapFont
     {
-        // embed minimal font
-        [Embed(source="../../assets/mini.fnt", mimeType="application/octet-stream")]
-        private static var MiniXml:Class;
-        
-        [Embed(source = "../../assets/mini.png")]
-        private static var MiniTexture:Class;
-        
         /** Use this constant for the <code>fontSize</code> property of the TextField class to 
          *  render the bitmap font in exactly the size it was created. */ 
         public static const NATIVE_SIZE:int = -1;
@@ -67,9 +60,10 @@ package starling.text
         /** The font name of the embedded minimal bitmap font. Use this e.g. for debug output. */
         public static const MINI:String = "mini";
         
-        private static const CHAR_SPACE:int   = 32;
-        private static const CHAR_TAB:int     =  9;
-        private static const CHAR_NEWLINE:int = 10;
+        private static const CHAR_SPACE:int           = 32;
+        private static const CHAR_TAB:int             =  9;
+        private static const CHAR_NEWLINE:int         = 10;
+        private static const CHAR_CARRIAGE_RETURN:int = 13;
         
         private var mTexture:Texture;
         private var mChars:Dictionary;
@@ -87,8 +81,8 @@ package starling.text
             // if no texture is passed in, we create the minimal, embedded font
             if (texture == null && fontXml == null)
             {
-                texture = Texture.fromBitmap(new MiniTexture());
-                fontXml = XML(new MiniXml());
+                texture = MiniBitmapFont.texture;
+                fontXml = MiniBitmapFont.xml;
             }
             
             mName = "unknown";
@@ -230,7 +224,6 @@ package starling.text
             
             var lines:Vector.<Vector.<CharLocation>>;
             var finished:Boolean = false;
-            var char:BitmapChar;
             var charLocation:CharLocation;
             var numChars:int;
             var containerWidth:Number;
@@ -258,21 +251,18 @@ package starling.text
                     {
                         var lineFull:Boolean = false;
                         var charID:int = text.charCodeAt(i);
+                        var char:BitmapChar = getChar(charID);
                         
-                        if (charID == CHAR_NEWLINE)
+                        if (charID == CHAR_NEWLINE || charID == CHAR_CARRIAGE_RETURN)
                         {
                             lineFull = true;
                         }
+                        else if (char == null)
+                        {
+                            trace("[Starling] Missing character: " + charID);
+                        }
                         else
                         {
-                            char = getChar(charID);
-                            
-                            if (char == null)
-                            {
-                                trace("[Starling] Missing character: " + charID);
-                                continue;
-                            }
-                            
                             if (charID == CHAR_SPACE || charID == CHAR_TAB)
                                 lastWhiteSpace = i;
                             
@@ -334,7 +324,7 @@ package starling.text
                     } // for each char
                 } // if (mLineHeight <= containerHeight)
                 
-                if (autoScale && !finished)
+                if (autoScale && !finished && fontSize > 3)
                 {
                     fontSize -= 1;
                     lines.length = 0;
@@ -360,9 +350,10 @@ package starling.text
                 
                 if (numChars == 0) continue;
                 
-                var lastLocation:CharLocation = line[line.length-1];
-                var right:Number = lastLocation.x + lastLocation.char.width;
                 var xOffset:int = 0;
+                var lastLocation:CharLocation = line[line.length-1];
+                var right:Number = lastLocation.x - lastLocation.char.xOffset 
+                                                  + lastLocation.char.xAdvance;
                 
                 if (hAlign == HAlign.RIGHT)       xOffset =  containerWidth - right;
                 else if (hAlign == HAlign.CENTER) xOffset = (containerWidth - right) / 2;

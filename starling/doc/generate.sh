@@ -4,10 +4,15 @@
 # It uses the "ASDoc" tool that comes with the Flex SDK.
 # Adapt the ASDOC variable below so that it points to the correct path.
 
-echo "Please enter the version number (like '1.0'), followed by [ENTER]:"
-read version
+if [ $# -ne 1 ]
+then
+  echo "Usage: `basename $0` [version]"
+  echo "  (version like '1.0')"
+  exit 1
+fi
 
-ASDOC="/Applications/Adobe Flash Builder 4.6/sdks/4.6.0/bin/asdoc"
+version=$1
+ASDOC="/Applications/Adobe Flash Builder 4.7/sdks/4.6.0/bin/asdoc"
 
 "${ASDOC}" \
   -doc-sources ../src \
@@ -22,5 +27,6 @@ ASDOC="/Applications/Adobe Flash Builder 4.6/sdks/4.6.0/bin/asdoc"
   -package starling.text "Classes for working with text fields and bitmap fonts." \
   -package starling.textures "Classes to create and work with GPU texture data." \
   -package starling.utils "Utility classes and helper methods." \
+  -package starling.filters "Post processing filters for special effects." \
   -output html
 

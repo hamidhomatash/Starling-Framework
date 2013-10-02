@@ -89,6 +89,23 @@ package starling.textures
                                            clipY + sTexCoords.y * clipHeight);
             }
         }
+
+        /** @inheritDoc */
+        public override function adjustTexCoords(texCoords:Vector.<Number>,
+                                                 startIndex:int=0, stride:int=0, count:int=-1):void
+        {
+            if (count < 0)
+                count = (texCoords.length - startIndex - 2) / (stride + 2) + 1;
+            
+            var index:int = startIndex;
+            for (var i:int=0; i<count; ++i)
+            {
+                texCoords[index] = mRootClipping.x + texCoords[index] * mRootClipping.width;
+                index += 1;
+                texCoords[index] = mRootClipping.y + texCoords[index] * mRootClipping.height;
+                index += 1 + stride;
+            }
+        }
         
         /** The texture which the subtexture is based on. */ 
         public function get parent():Texture { return mParent; }
@@ -104,6 +121,9 @@ package starling.textures
         public override function get base():TextureBase { return mParent.base; }
         
         /** @inheritDoc */
+        public override function get root():ConcreteTexture { return mParent.root; }
+        
+        /** @inheritDoc */
         public override function get format():String { return mParent.format; }
         
         /** @inheritDoc */
@@ -111,6 +131,12 @@ package starling.textures
         
         /** @inheritDoc */
         public override function get height():Number { return mParent.height * mClipping.height; }
+        
+        /** @inheritDoc */
+        public override function get nativeWidth():Number { return mParent.nativeWidth * mClipping.width; }
+        
+        /** @inheritDoc */
+        public override function get nativeHeight():Number { return mParent.nativeHeight * mClipping.height; }
         
         /** @inheritDoc */
         public override function get mipMapping():Boolean { return mParent.mipMapping; }

@@ -2,8 +2,6 @@ package scenes
 {
     import starling.display.Image;
     import starling.text.TextField;
-    import starling.utils.HAlign;
-    import starling.utils.VAlign;
     import starling.utils.deg2rad;
     
     import utils.TouchSheet;
@@ -21,7 +19,7 @@ package scenes
             // to find out how to react to touch events have a look at the TouchSheet class! 
             // It's part of the demo.
             
-            var sheet:TouchSheet = new TouchSheet(new Image(Assets.getTexture("StarlingSheet")));
+            var sheet:TouchSheet = new TouchSheet(new Image(Game.assets.getTexture("starling_sheet")));
             sheet.x = Constants.CenterX;
             sheet.y = Constants.CenterY;
             sheet.rotation = deg2rad(10);

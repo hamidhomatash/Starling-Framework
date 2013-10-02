@@ -23,6 +23,8 @@ package tests
     import starling.display.Quad;
     import starling.display.Sprite;
     import starling.display.Stage;
+    import starling.utils.HAlign;
+    import starling.utils.VAlign;
     import starling.utils.deg2rad;
 
     public class DisplayObjectTest
@@ -96,6 +98,43 @@ package tests
             Helpers.compareMatrices(child.transformationMatrix, matrix);
                         
             // more is tested indirectly via 'testBoundsInSpace' in DisplayObjectContainerTest            
+        }
+        
+        [Test]
+        public function testSetTransformationMatrix():void
+        {
+            var sprite:Sprite = new Sprite();
+            var matrix:Matrix = new Matrix();
+            matrix.scale(1.5, 2.0);
+            matrix.rotate(0.25);
+            matrix.translate(10, 20);
+            sprite.transformationMatrix = matrix;
+            
+            assertThat(sprite.scaleX, closeTo(1.5, E));
+            assertThat(sprite.scaleY, closeTo(2.0, E));
+            assertThat(sprite.rotation, closeTo(0.25, E));
+            assertThat(sprite.x, closeTo(10, E));
+            assertThat(sprite.y, closeTo(20, E));
+            
+            Helpers.compareMatrices(matrix, sprite.transformationMatrix);
+        }
+        
+        [Test]
+        public function testSetTransformationMatrixWithPivot():void
+        {
+            // pivot point information is redundant; instead, x/y properties will be modified.
+            
+            var sprite:Sprite = new Sprite();
+            sprite.pivotX = 50;
+            sprite.pivotY = 20;
+            
+            var matrix:Matrix = sprite.transformationMatrix;
+            sprite.transformationMatrix = matrix;
+            
+            assertThat(sprite.x, closeTo(-50, E));
+            assertThat(sprite.y, closeTo(-20, E));
+            assertThat(sprite.pivotX, closeTo(0.0, E));
+            assertThat(sprite.pivotY, closeTo(0.0, E));
         }
         
         [Test]
@@ -277,6 +316,74 @@ package tests
             sprite.x = quad.x = 5;
             sprite.y = quad.y = 20;
             Helpers.compareRectangles(sprite.bounds, quad.bounds);
+        }
+        
+        [Test]
+        public function testPivotWithSkew():void
+        {
+            var width:int = 200;
+            var height:int = 100;
+            var skewX:Number = 0.2;
+            var skewY:Number = 0.35;
+            var scaleY:Number = 0.5;
+            var rotation:Number = 0.5;
+            
+            // create a scaled, rotated and skewed object from a sprite and a quad
+            
+            var quad:Quad = new Quad(width, height);
+            quad.x = width / -2;
+            quad.y = height / -2;
+            
+            var sprite:Sprite = new Sprite();
+            sprite.x = width / 2;
+            sprite.y = height / 2;
+            sprite.skewX = skewX;
+            sprite.skewY = skewY;
+            sprite.rotation = rotation;
+            sprite.scaleY = scaleY;
+            sprite.addChild(quad);
+            
+            // do the same without a sprite, but with a pivoted quad
+            
+            var pQuad:Quad = new Quad(width, height);
+            pQuad.x = width / 2;
+            pQuad.y = height / 2;
+            pQuad.pivotX = width / 2;
+            pQuad.pivotY = height / 2;
+            pQuad.skewX = skewX;
+            pQuad.skewY = skewY;
+            pQuad.scaleY = scaleY;
+            pQuad.rotation = rotation;
+            
+            // the bounds have to be the same
+            
+            Helpers.compareRectangles(sprite.bounds, pQuad.bounds, 1.0);
+        }
+        
+        [Test]
+        public function testAlignPivot():void
+        {
+            var sprite:Sprite = new Sprite();
+            var quad:Quad = new Quad(100, 50);
+            quad.x = 200;
+            quad.y = -100;
+            sprite.addChild(quad);
+            
+            sprite.alignPivot();
+            assertThat(sprite.pivotX, closeTo(250, E));
+            assertThat(sprite.pivotY, closeTo(-75, E));
+
+            sprite.alignPivot(HAlign.LEFT, VAlign.TOP);
+            assertThat(sprite.pivotX, closeTo(200, E));
+            assertThat(sprite.pivotY, closeTo(-100, E));
+
+            sprite.alignPivot(HAlign.RIGHT, VAlign.BOTTOM);
+            assertThat(sprite.pivotX, closeTo(300, E));
+            assertThat(sprite.pivotY, closeTo(-50, E));
+
+            sprite.alignPivot(HAlign.LEFT, VAlign.BOTTOM);
+            assertThat(sprite.pivotX, closeTo(200, E));
+            assertThat(sprite.pivotY, closeTo(-50, E));
         }
         
         [Test]
